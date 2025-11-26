@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ item.title }} - NHCE Lost & Found{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{{ url_for('items_list') }}" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to Items
+    </a>
+    
+    <div class="item-detail">
+        <div class="item-detail-image">
+            {% if item.image_path %}
+            <img src="{{ url_for('static', filename='uploads/' + item.image_path) }}" alt="{{ item.title }}">
+            {% else %}
+            <div class="no-image-large">
+                <i class="fas fa-image"></i>
+                <span>No Image Available</span>
+            </div>
+            {% endif %}
+            <span class="item-badge large {{ item.item_type }}">{{ item.item_type|title }}</span>
+        </div>
+        
+        <div class="item-detail-info">
+            <div class="item-status-bar">
+                <span class="status-badge {{ item.status }}">{{ item.status|title }}</span>
+                <span class="expiry-info">
+                    <i class="fas fa-clock"></i> 
+                    {% if item.days_remaining > 0 %}
+                    Expires in {{ item.days_remaining }} day{% if item.days_remaining != 1 %}s{% endif %}
+                    {% else %}
+                    Expired
+                    {% endif %}
+                </span>
+            </div>
+            
+            <h1>{{ item.title }}</h1>
+            
+            <div class="item-attributes">
+                <div class="attribute">
+                    <i class="fas fa-tag"></i>
+                    <span class="label">Category</span>
+                    <span class="value">{{ item.category|title }}</span>
+                </div>
+                {% if item.color %}
+                <div class="attribute">
+                    <i class="fas fa-palette"></i>
+                    <span class="label">Color</span>
+                    <span class="value">{{ item.color }}</span>
+                </div>
+                {% endif %}
+                {% if item.brand %}
+                <div class="attribute">
+                    <i class="fas fa-certificate"></i>
+                    <span class="label">Brand</span>
+                    <span class="value">{{ item.brand }}</span>
+                </div>
+                {% endif %}
+                {% if item.location %}
+                <div class="attribute">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span class="label">Location</span>
+                    <span class="value">{{ item.location }}</span>
+                </div>
+                {% endif %}
+                {% if item.date_occurred %}
+                <div class="attribute">
+                    <i class="fas fa-calendar"></i>
+                    <span class="label">Date {{ item.item_type|title }}</span>
+                    <span class="value">{{ item.date_occurred.strftime('%B %d, %Y') }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="item-description-full">
+                <h3>Description</h3>
+                <p>{{ item.description }}</p>
+            </div>
+            
+            <div class="item-owner-card">
+                <h3>Posted By</h3>
+                <a href="{{ url_for('profile', user_id=item.owner.id) }}" class="owner-info">
+                    <div class="owner-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="owner-details">
+                        <span class="owner-name">{{ item.owner.full_name }}</span>
+                        <span class="owner-dept">{{ item.owner.department or 'NHCE Student' }}</span>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                
+                {% if current_user.is_authenticated and current_user.id != item.owner.id %}
+                <a href="{{ url_for('chat', user_id=item.owner.id, item_id=item.id) }}" class="btn btn-primary btn-block">
+                    <i class="fas fa-comments"></i> Contact {{ item.owner.full_name.split()[0] }}
+                </a>
+                {% elif not current_user.is_authenticated %}
+                <a href="{{ url_for('login') }}" class="btn btn-primary btn-block">
+                    <i class="fas fa-sign-in-alt"></i> Login to Contact
+                </a>
+                {% endif %}
+            </div>
+            
+            {% if current_user.is_authenticated and current_user.id == item.owner.id %}
+            <div class="item-actions">
+                <form action="{{ url_for('resolve_item', item_id=item.id) }}" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Mark as Resolved
+                    </button>
+                </form>
+                <form action="{{ url_for('delete_item', item_id=item.id) }}" method="POST" style="display: inline;" 
+                      onsubmit="return confirm('Are you sure you want to delete this item?');">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if similar_items %}
+    <div class="similar-items-section">
+        <h2><i class="fas fa-magic"></i> Potential Matches</h2>
+        <p class="section-subtitle">These items might be related based on image similarity</p>
+        <div class="similar-items-grid">
+            {% for match in similar_items %}
+            <a href="{{ url_for('item_detail', item_id=match.item.id) }}" class="similar-item-card">
+                <div class="match-score">{{ match.score }}% Match</div>
+                <div class="similar-image">
+                    {% if match.item.image_path %}
+                    <img src="{{ url_for('static', filename='uploads/' + match.item.image_path) }}" alt="{{ match.item.title }}">
+                    {% endif %}
+                </div>
+                <div class="similar-info">
+                    <h4>{{ match.item.title }}</h4>
+                    <span class="item-badge small {{ match.item.item_type }}">{{ match.item.item_type|title }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

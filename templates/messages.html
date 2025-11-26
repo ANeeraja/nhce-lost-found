@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Messages - NHCE Lost & Found{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1><i class="fas fa-comments"></i> Messages</h1>
+    </div>
+    
+    {% if conversations %}
+    <div class="conversations-list">
+        {% for conv in conversations %}
+        {% set other_user = conv.user2 if conv.user1_id == current_user.id else conv.user1 %}
+        <a href="{{ url_for('chat', user_id=other_user.id) }}" class="conversation-card">
+            <div class="conversation-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="conversation-info">
+                <h3>{{ other_user.full_name }}</h3>
+                <p class="conversation-dept">{{ other_user.department or 'NHCE Student' }}</p>
+                {% if conv.item %}
+                <p class="conversation-item">
+                    <i class="fas fa-box"></i> Re: {{ conv.item.title }}
+                </p>
+                {% endif %}
+            </div>
+            <div class="conversation-meta">
+                <span class="conversation-time">{{ conv.last_message_at.strftime('%b %d') }}</span>
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-comment-slash"></i>
+        </div>
+        <h2>No Messages Yet</h2>
+        <p>Start a conversation by contacting someone about their lost or found item.</p>
+        <a href="{{ url_for('items_list') }}" class="btn btn-primary">
+            <i class="fas fa-search"></i> Browse Items
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

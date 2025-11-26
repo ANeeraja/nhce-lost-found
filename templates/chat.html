@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat with {{ other_user.full_name }} - NHCE Lost & Found{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="chat-header">
+        <a href="{{ url_for('messages') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <a href="{{ url_for('profile', user_id=other_user.id) }}" class="chat-user-info">
+            <div class="chat-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="chat-user-details">
+                <h3>{{ other_user.full_name }}</h3>
+                <span>{{ other_user.department or 'NHCE Student' }}</span>
+            </div>
+        </a>
+        <a href="{{ url_for('profile', user_id=other_user.id) }}" class="view-profile-btn">
+            <i class="fas fa-info-circle"></i>
+        </a>
+    </div>
+    
+    {% if conversation.item %}
+    <div class="chat-context">
+        <a href="{{ url_for('item_detail', item_id=conversation.item.id) }}" class="context-item">
+            <i class="fas fa-box"></i>
+            <span>Regarding: {{ conversation.item.title }}</span>
+            <i class="fas fa-external-link-alt"></i>
+        </a>
+    </div>
+    {% endif %}
+    
+    <div class="chat-messages" id="chatMessages">
+        {% if not messages %}
+        <div class="chat-empty">
+            <i class="fas fa-hand-wave"></i>
+            <p>Start the conversation! Say hi to {{ other_user.full_name.split()[0] }}.</p>
+        </div>
+        {% endif %}
+        
+        {% for msg in messages %}
+        <div class="message {% if msg.sender_id == current_user.id %}sent{% else %}received{% endif %}">
+            <div class="message-content">
+                <p>{{ msg.content }}</p>
+                <span class="message-time">{{ msg.timestamp.strftime('%I:%M %p') }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="chat-input-container">
+        <form id="messageForm" class="chat-input-form">
+            <input type="text" id="messageInput" placeholder="Type your message..." autocomplete="off" required>
+            <button type="submit" class="send-btn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+const chatMessages = document.getElementById('chatMessages');
+const messageForm = document.getElementById('messageForm');
+const messageInput = document.getElementById('messageInput');
+const receiverId = {{ other_user.id }};
+
+// Scroll to bottom
+chatMessages.scrollTop = chatMessages.scrollHeight;
+
+// Socket.IO connection
+const socket = io();
+const room = 'chat_' + Math.min({{ current_user.id }}, receiverId) + '_' + Math.max({{ current_user.id }}, receiverId);
+
+socket.emit('join', { room: room });
+
+// Send message
+messageForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const content = messageInput.value.trim();
+    if (!content) return;
+    
+    // Add message to UI immediately
+    addMessage(content, true);
+    messageInput.value = '';
+    
+    // Send to server
+    try {
+        await fetch('/api/send-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ receiver_id: receiverId, content: content })
+        });
+        
+        // Emit to socket for real-time
+        socket.emit('send_message', { room: room, content: content });
+    } catch (err) {
+        console.error('Failed to send message:', err);
+    }
+});
+
+// Receive message
+socket.on('receive_message', (data) => {
+    if (data.sender_id !== {{ current_user.id }}) {
+        addMessage(data.content, false, data.timestamp);
+    }
+});
+
+function addMessage(content, isSent, time = null) {
+    const emptyState = chatMessages.querySelector('.chat-empty');
+    if (emptyState) emptyState.remove();
+    
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message ' + (isSent ? 'sent' : 'received');
+    
+    const now = time || new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    
+    msgDiv.innerHTML = `
+        <div class="message-content">
+            <p>${escapeHtml(content)}</p>
+            <span class="message-time">${now}</span>
+        </div>
+    `;
+    
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}NHCE Lost & Found - Home{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">
+            <span class="gradient-text">Lost Something?</span>
+            <br>We'll Help You Find It
+        </h1>
+        <p class="hero-subtitle">
+            New Horizon College of Engineering's community-driven platform to help students 
+            find their lost belongings through image matching and direct communication.
+        </p>
+        <div class="hero-buttons">
+            <a href="{{ url_for('post_item') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus"></i> Report Lost/Found Item
+            </a>
+            <a href="{{ url_for('items_list') }}" class="btn btn-secondary btn-lg">
+                <i class="fas fa-search"></i> Browse All Items
+            </a>
+        </div>
+    </div>
+    <div class="hero-visual">
+        <div class="floating-card card-1">
+            <i class="fas fa-bag-shopping"></i>
+            <span>Bags</span>
+        </div>
+        <div class="floating-card card-2">
+            <i class="fas fa-wallet"></i>
+            <span>Wallets</span>
+        </div>
+        <div class="floating-card card-3">
+            <i class="fas fa-mobile-alt"></i>
+            <span>Phones</span>
+        </div>
+        <div class="floating-card card-4">
+            <i class="fas fa-key"></i>
+            <span>Keys</span>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <div class="container">
+        <h2 class="section-title">How It Works</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <h3>Upload or Describe</h3>
+                <p>Post your lost or found item with an image or detailed description including color, brand, and features.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h3>Smart Matching</h3>
+                <p>Our image matching technology automatically finds similar items to help you locate your belongings faster.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h3>Direct Chat</h3>
+                <p>Connect directly with other students through our built-in chat system to coordinate item retrieval.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3>Auto Cleanup</h3>
+                <p>Items are automatically removed after 7 days to keep the platform clean and relevant.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if recent_lost %}
+<section class="recent-items">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Recently Lost Items</h2>
+            <a href="{{ url_for('items_list', type='lost') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="items-grid">
+            {% for item in recent_lost %}
+            <a href="{{ url_for('item_detail', item_id=item.id) }}" class="item-card lost">
+                <div class="item-image">
+                    {% if item.image_path %}
+                    <img src="{{ url_for('static', filename='uploads/' + item.image_path) }}" alt="{{ item.title }}">
+                    {% else %}
+                    <div class="no-image">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    {% endif %}
+                    <span class="item-badge lost">Lost</span>
+                </div>
+                <div class="item-info">
+                    <h3>{{ item.title }}</h3>
+                    <p class="item-category"><i class="fas fa-tag"></i> {{ item.category|title }}</p>
+                    <p class="item-location"><i class="fas fa-map-marker-alt"></i> {{ item.location or 'Location not specified' }}</p>
+                    <p class="item-time"><i class="fas fa-clock"></i> {{ item.days_remaining }} days remaining</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if recent_found %}
+<section class="recent-items found-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Recently Found Items</h2>
+            <a href="{{ url_for('items_list', type='found') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="items-grid">
+            {% for item in recent_found %}
+            <a href="{{ url_for('item_detail', item_id=item.id) }}" class="item-card found">
+                <div class="item-image">
+                    {% if item.image_path %}
+                    <img src="{{ url_for('static', filename='uploads/' + item.image_path) }}" alt="{{ item.title }}">
+                    {% else %}
+                    <div class="no-image">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    {% endif %}
+                    <span class="item-badge found">Found</span>
+                </div>
+                <div class="item-info">
+                    <h3>{{ item.title }}</h3>
+                    <p class="item-category"><i class="fas fa-tag"></i> {{ item.category|title }}</p>
+                    <p class="item-location"><i class="fas fa-map-marker-alt"></i> {{ item.location or 'Location not specified' }}</p>
+                    <p class="item-time"><i class="fas fa-clock"></i> {{ item.days_remaining }} days remaining</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Found Something That's Not Yours?</h2>
+            <p>Help a fellow student by posting it here. Good karma comes to those who help others!</p>
+            <a href="{{ url_for('post_item') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-hand-holding-heart"></i> Report Found Item
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

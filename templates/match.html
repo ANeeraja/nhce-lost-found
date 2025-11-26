@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Image Match - NHCE Lost & Found{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header centered">
+        <h1><i class="fas fa-images"></i> Image Matching</h1>
+        <p>Upload an image to find similar items in our database</p>
+    </div>
+    
+    <div class="match-container">
+        <form method="POST" enctype="multipart/form-data" class="match-form">
+            <div class="match-upload-area" id="matchUploadArea">
+                <input type="file" id="matchImage" name="image" accept="image/*" hidden required>
+                <div class="upload-placeholder" id="matchPlaceholder">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>Upload an image of your item</span>
+                    <p>Click or drag to upload (JPG, PNG)</p>
+                </div>
+                <div class="upload-preview" id="matchPreview" style="display: none;">
+                    <img id="matchPreviewImage" src="" alt="Preview">
+                    <button type="button" class="remove-image" onclick="removeMatchImage()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-search"></i> Find Similar Items
+            </button>
+        </form>
+        
+        {% if matches %}
+        <div class="match-results">
+            <h2><i class="fas fa-magic"></i> Matching Results</h2>
+            <p class="results-count">Found {{ matches|length }} potential matches</p>
+            
+            <div class="matches-grid">
+                {% for match in matches %}
+                <a href="{{ url_for('item_detail', item_id=match.item.id) }}" class="match-card">
+                    <div class="match-score-badge">{{ match.score }}% Match</div>
+                    <div class="match-image">
+                        {% if match.item.image_path %}
+                        <img src="{{ url_for('static', filename='uploads/' + match.item.image_path) }}" alt="{{ match.item.title }}">
+                        {% endif %}
+                    </div>
+                    <div class="match-info">
+                        <span class="item-badge small {{ match.item.item_type }}">{{ match.item.item_type|title }}</span>
+                        <h3>{{ match.item.title }}</h3>
+                        <p><i class="fas fa-tag"></i> {{ match.item.category|title }}</p>
+                        <p><i class="fas fa-user"></i> {{ match.item.owner.full_name.split()[0] }}</p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% elif matches is defined and matches|length == 0 %}
+        <div class="no-matches">
+            <i class="fas fa-search"></i>
+            <h3>No Matches Found</h3>
+            <p>We couldn't find any similar items. Try posting your item instead!</p>
+            <a href="{{ url_for('post_item') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Post Item
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+const matchUploadArea = document.getElementById('matchUploadArea');
+const matchFileInput = document.getElementById('matchImage');
+const matchPlaceholder = document.getElementById('matchPlaceholder');
+const matchPreview = document.getElementById('matchPreview');
+const matchPreviewImage = document.getElementById('matchPreviewImage');
+
+matchUploadArea.addEventListener('click', () => matchFileInput.click());
+
+matchUploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    matchUploadArea.classList.add('dragover');
+});
+
+matchUploadArea.addEventListener('dragleave', () => {
+    matchUploadArea.classList.remove('dragover');
+});
+
+matchUploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    matchUploadArea.classList.remove('dragover');
+    if (e.dataTransfer.files.length) {
+        matchFileInput.files = e.dataTransfer.files;
+        showMatchPreview(e.dataTransfer.files[0]);
+    }
+});
+
+matchFileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) {
+        showMatchPreview(e.target.files[0]);
+    }
+});
+
+function showMatchPreview(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        matchPreviewImage.src = e.target.result;
+        matchPlaceholder.style.display = 'none';
+        matchPreview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeMatchImage() {
+    matchFileInput.value = '';
+    matchPlaceholder.style.display = 'flex';
+    matchPreview.style.display = 'none';
+    matchPreviewImage.src = '';
+}
+</script>
+{% endblock %}
+

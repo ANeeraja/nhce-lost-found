@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}Post Item - NHCE Lost & Found{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header centered">
+        <h1><i class="fas fa-plus-circle"></i> Post an Item</h1>
+        <p>Report a lost or found item to help the community</p>
+    </div>
+    
+    <div class="post-form-container">
+        <form method="POST" enctype="multipart/form-data" class="post-form">
+            <div class="form-section">
+                <h3><i class="fas fa-info-circle"></i> Item Type</h3>
+                <div class="type-selector">
+                    <label class="type-option">
+                        <input type="radio" name="item_type" value="lost" required>
+                        <div class="type-card lost">
+                            <i class="fas fa-search"></i>
+                            <span>I Lost Something</span>
+                            <p>Report an item you've lost</p>
+                        </div>
+                    </label>
+                    <label class="type-option">
+                        <input type="radio" name="item_type" value="found">
+                        <div class="type-card found">
+                            <i class="fas fa-hand-holding"></i>
+                            <span>I Found Something</span>
+                            <p>Report an item you've found</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3><i class="fas fa-edit"></i> Item Details</h3>
+                
+                <div class="form-group">
+                    <label for="title">Title *</label>
+                    <input type="text" id="title" name="title" required 
+                           placeholder="e.g., Black Leather Wallet, Blue Backpack">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="category">Category *</label>
+                        <select id="category" name="category" required>
+                            <option value="">Select Category</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}">{{ cat|title|replace('_', ' ') }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="color">Color</label>
+                        <input type="text" id="color" name="color" 
+                               placeholder="e.g., Black, Blue, Red">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="brand">Brand</label>
+                        <input type="text" id="brand" name="brand" 
+                               placeholder="e.g., Nike, Samsung, Wildcraft">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description *</label>
+                    <textarea id="description" name="description" required rows="4"
+                              placeholder="Describe the item in detail - size, distinguishing features, contents (if applicable), any unique marks..."></textarea>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3><i class="fas fa-map-marker-alt"></i> Location & Date</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" name="location" 
+                               placeholder="e.g., Library, Canteen, Block A, Parking Lot">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="date_occurred">Date Lost/Found</label>
+                        <input type="date" id="date_occurred" name="date_occurred">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3><i class="fas fa-camera"></i> Image (Optional but Recommended)</h3>
+                <p class="section-note">Adding an image helps our matching system find similar items</p>
+                
+                <div class="image-upload-area" id="uploadArea">
+                    <input type="file" id="image" name="image" accept="image/*" hidden>
+                    <div class="upload-placeholder" id="uploadPlaceholder">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>Click or drag to upload image</span>
+                        <p>Supports JPG, PNG, GIF (Max 16MB)</p>
+                    </div>
+                    <div class="upload-preview" id="uploadPreview" style="display: none;">
+                        <img id="previewImage" src="" alt="Preview">
+                        <button type="button" class="remove-image" onclick="removeImage()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-notice">
+                <i class="fas fa-info-circle"></i>
+                <p>Your item will be automatically removed after <strong>7 days</strong>. 
+                   You can mark it as resolved or delete it anytime from your profile.</p>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-lg btn-block">
+                <i class="fas fa-paper-plane"></i> Post Item
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('image');
+const placeholder = document.getElementById('uploadPlaceholder');
+const preview = document.getElementById('uploadPreview');
+const previewImage = document.getElementById('previewImage');
+
+uploadArea.addEventListener('click', () => fileInput.click());
+
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        showPreview(e.dataTransfer.files[0]);
+    }
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) {
+        showPreview(e.target.files[0]);
+    }
+});
+
+function showPreview(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        previewImage.src = e.target.result;
+        placeholder.style.display = 'none';
+        preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeImage() {
+    fileInput.value = '';
+    placeholder.style.display = 'flex';
+    preview.style.display = 'none';
+    previewImage.src = '';
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Browse Items - NHCE Lost & Found{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-search"></i> Browse Items</h1>
+    <p>Find lost items or check if someone found yours</p>
+</div>
+
+<div class="container">
+    <div class="filters-section">
+        <form method="GET" class="filters-form">
+            <div class="filter-group">
+                <label>Type</label>
+                <div class="filter-buttons">
+                    <a href="{{ url_for('items_list', type='all', category=current_category, search=search) }}" 
+                       class="filter-btn {% if current_type == 'all' %}active{% endif %}">All</a>
+                    <a href="{{ url_for('items_list', type='lost', category=current_category, search=search) }}" 
+                       class="filter-btn lost {% if current_type == 'lost' %}active{% endif %}">Lost</a>
+                    <a href="{{ url_for('items_list', type='found', category=current_category, search=search) }}" 
+                       class="filter-btn found {% if current_type == 'found' %}active{% endif %}">Found</a>
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <label for="category">Category</label>
+                <select name="category" id="category" onchange="this.form.submit()">
+                    <option value="all">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>
+                        {{ cat|title|replace('_', ' ') }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group search-group">
+                <label for="search">Search</label>
+                <div class="search-input">
+                    <input type="text" name="search" id="search" value="{{ search }}" 
+                           placeholder="Search by title, color, brand...">
+                    <button type="submit" class="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <input type="hidden" name="type" value="{{ current_type }}">
+        </form>
+    </div>
+    
+    {% if items %}
+    <div class="items-count">
+        <p>Showing <strong>{{ items|length }}</strong> items</p>
+    </div>
+    
+    <div class="items-grid large">
+        {% for item in items %}
+        <a href="{{ url_for('item_detail', item_id=item.id) }}" class="item-card {{ item.item_type }}">
+            <div class="item-image">
+                {% if item.image_path %}
+                <img src="{{ url_for('static', filename='uploads/' + item.image_path) }}" alt="{{ item.title }}">
+                {% else %}
+                <div class="no-image">
+                    <i class="fas fa-image"></i>
+                    <span>No Image</span>
+                </div>
+                {% endif %}
+                <span class="item-badge {{ item.item_type }}">{{ item.item_type|title }}</span>
+                {% if item.days_remaining <= 2 %}
+                <span class="expiring-badge">Expiring Soon</span>
+                {% endif %}
+            </div>
+            <div class="item-info">
+                <h3>{{ item.title }}</h3>
+                <p class="item-description">{{ item.description[:100] }}{% if item.description|length > 100 %}...{% endif %}</p>
+                <div class="item-meta">
+                    <span class="item-category"><i class="fas fa-tag"></i> {{ item.category|title }}</span>
+                    {% if item.color %}
+                    <span class="item-color"><i class="fas fa-palette"></i> {{ item.color }}</span>
+                    {% endif %}
+                </div>
+                <p class="item-location"><i class="fas fa-map-marker-alt"></i> {{ item.location or 'Location not specified' }}</p>
+                <div class="item-footer">
+                    <span class="item-poster">
+                        <i class="fas fa-user"></i> {{ item.owner.full_name.split()[0] }}
+                    </span>
+                    <span class="item-time">
+                        <i class="fas fa-clock"></i> {{ item.days_remaining }}d left
+                    </span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-box-open"></i>
+        </div>
+        <h2>No Items Found</h2>
+        <p>{% if search %}No items match your search "{{ search }}". Try different keywords.{% else %}There are no items in this category yet.{% endif %}</p>
+        <a href="{{ url_for('post_item') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Post an Item
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
